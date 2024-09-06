@@ -61,12 +61,7 @@ def detectBraveChange(proyeccion, threshold, distanceTolerance=5):
   reduce.append(start)
   return reduce
 
-
-def run():
-  img_path = "./table.jpg"
-  img = cv2.imread(img_path)
-  mask_dilated = detectGreenLines(img)
-
+def getLinesTable(mask_dilated):
   DISTANCE_TOLERANCE = 15
   iPx = integralProyectiva(mask_dilated, 'x')
   iPx_norm, max_iPx = normalizarProyeccion(iPx)
@@ -76,32 +71,50 @@ def run():
   iPy_norm, max_iPy = normalizarProyeccion(iPy)
   listIndexY = detectBraveChange(iPy_norm, 0.1, DISTANCE_TOLERANCE)
 
+  return ( listIndexX, listIndexY )
 
-  print(len(listIndexX))
-  fig, (ax1, ax2) = plt.subplots(2, 1)
-
-  for idx, index in enumerate(listIndexX):
-    ax1.axvline(x=index, color='r')
-    ax1.axvline(x=index+DISTANCE_TOLERANCE, color='b')
-
-  ax1.plot(iPx_norm)
-  ax1.set_title('Proyección x')
-
-  print(len(listIndexY))
-
-  for idx, index in enumerate(listIndexY):
-    ax2.axvline(x=index, color='r')
-    ax2.axvline(x=index+DISTANCE_TOLERANCE, color='b')
-
-  ax2.plot(iPy_norm)
-  ax2.set_title('Proyección y')
-
-  plt.show()
+def run():
+  img_path = "./table.jpg"
+  img = cv2.imread(img_path)
+  img = cv2.copyMakeBorder(img, 0, 20, 0, 0, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
 
 
-  cv2.imshow('mask', mask_dilated)
+  cv2.imshow("Original", img)
   cv2.waitKey(0)
+  
+  mask_dilated = detectGreenLines(img)
+  (columnas, filas) = getLinesTable(mask_dilated)
+
+
+
+  lista_celdas = []
+  # Crear las celdas y almacenarlas en la lista de diccionarios
+  for i in range(len(filas) - 1):
+    for j in range(len(columnas) - 1):
+      # Definir las coordenadas de la celda
+      izquierda = columnas[j]
+      superior = filas[i]
+      derecha = columnas[j+1]
+      inferior = filas[i+1]
+
+      # Recortar la celda de la imagen original
+      celda = img[superior:inferior, izquierda:derecha]
+
+      # Almacenar la celda en un diccionario con las coordenadas y la imagen
+      celda_info = {
+          "fila": i + 1,  # Número de fila
+          "columna": j + 1,  # Número de columna
+          "imagen": celda  # Imagen de la celda
+      }
+
+      # Añadir el diccionario a la lista
+      lista_celdas.append(celda_info)
+
+  
+  for celda in lista_celdas:
+    cv2.imshow(f"Fila {celda['fila']} - Columna {celda['columna']}", celda['imagen'])
+    cv2.waitKey(0)
 
 
 if __name__ == '__main__':
