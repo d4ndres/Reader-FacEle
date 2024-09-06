@@ -88,10 +88,34 @@ def rangeClusters1D(proyeccion, threshold):
 
   return range_pairs
 
-def getRangeTableFromClusters(clusters):
+def getBiggestRange(clusters):
   return max(clusters, key=lambda x: x[1] - x[0])
 
+def getTableImage(img, iPyN, range_pairs):
+  biggest_range = getBiggestRange(range_pairs)
+
+  tableIndex = []
+  maxValue = max(iPyN)
+  minValue = min(iPyN)
+  for index, value in enumerate(iPyN):
+    if abs(value - maxValue) > 0.05 and abs(value - minValue) > 0.05:
+      tableIndex.append(index)
+
+
+  initYTable = 0
+  endYTable = 0
+
+  for index in tableIndex:
+    if index > biggest_range[0] and index <= biggest_range[1]:
+        if initYTable == 0 or index < initYTable:
+            initYTable = index
+        if index > endYTable:
+            endYTable = index
+
+  return img[initYTable:endYTable, :]
+
 def run():
+  # pdf_path = "./documentos/DSN13.pdf"
   pdf_path = "./documentos/FE-11834.pdf"
   pages = dpf2images(pdf_path)
   combined_image_rgb = unifyImagesVertically(pages)
@@ -100,21 +124,11 @@ def run():
   # cv2.imwrite('mask.jpg', mask)
 
   iPy = integralProyectiva(mask, 'y')
+  iPyN, maximo = normalizarProyeccion(iPy)
+  range_pairs = rangeClusters1D(iPyN, 120)
 
-  iPy, maximo = normalizarProyeccion(iPy)
-
-  range_pairs = rangeClusters1D(iPy, 100)
-
-  range_table = getRangeTableFromClusters(range_pairs)
-
-  plt.plot(iPy)
-  plt.axvline(range_table[0], color='r')
-  plt.axvline(range_table[1], color='r')
-  plt.title('Proyección Y')
-  plt.show()
-  
-
-
+  imageTable = getTableImage( combined_image_rgb, iPyN, range_pairs)
+  showImage(imageTable)
 
 
 if __name__ == '__main__':
