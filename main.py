@@ -1,23 +1,20 @@
-import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from pdf2image import convert_from_path # type: ignore
-POPPLER_PATH = r"C:\pdf2img\poppler-0.68.0\bin"
 
-def dpf2images(path):
-  dpi=200 # puntos por pulgada
-  return convert_from_path(path, dpi, poppler_path=POPPLER_PATH)
+def integralProyectiva(image, eje):
+  if eje == 'x':
+    return np.sum(image, axis=0)
+  elif eje == 'y':
+    return np.sum(image, axis=1)
+  else:
+    raise ValueError('El eje debe ser x o y')
+  
+def normalizarProyeccion(proyeccion):
+  return (proyeccion / np.max(proyeccion), np.max(proyeccion))
 
-def unifyImagesVertically(images):
-  unify = np.vstack(images)
-  originalColors = cv2.cvtColor(unify, cv2.COLOR_BGR2RGB)
-  return originalColors
-
-def showImage(img, name='img'):
-  cv2.imshow(name, img)
-  cv2.waitKey(0)
-  cv2.destroyAllWindows()
+def invNormalizarProyeccion(proyeccion, maximo):
+  return proyeccion * maximo
 
 def detectGreenLines(image):
     # Convertir a HSV para detectar color verde
@@ -36,99 +33,75 @@ def detectGreenLines(image):
 
     return mask_dilated
 
-def integralProyectiva(image, eje):
-  if eje == 'x':
-    return np.sum(image, axis=0)
-  elif eje == 'y':
-    return np.sum(image, axis=1)
-  else:
-    raise ValueError('El eje debe ser x o y')
-  
-def normalizarProyeccion(proyeccion):
-  return (proyeccion / np.max(proyeccion), np.max(proyeccion))
 
-def invNormalizarProyeccion(proyeccion, maximo):
-  return proyeccion * maximo
-
-def graficarProyeccion(proyeccion, eje='any'):
-  plt.plot(proyeccion)
-  plt.title(f'Proyección {eje}')
-  plt.show()
-
-def rangeClusters1D(proyeccion, threshold):
-  # codigo a completar
+# cambio brusco en la proyección
+def detectBraveChange(proyeccion, threshold, distanceTolerance=5):
   listIndex = []
   for i in range(1, len(proyeccion)):
-      prev_value = proyeccion[i-1]
-      current_value = proyeccion[i]
-      max_value = max(prev_value, current_value)
-      
-      if max_value != 0 and abs(prev_value - current_value) / max_value >= 0.1:
-          # listIndex.append((i, current_value))
-          listIndex.append(i)
+    prev_value = proyeccion[i-1]
+    current_value = proyeccion[i]
+    max_value = max(prev_value, current_value)
+    
+    if max_value != 0 and abs(prev_value - current_value) / max_value >= threshold:
+      listIndex.append(i)
 
-  # Crear la lista de pares de valores (rango) a partir de la lista listIndex
-  range_pairs = []
-  start = listIndex[0]  # Iniciar con el primer valor de la lista
-
+  # reduce by a distance tolerance
+  reduce = []
+  start = listIndex[0]
   for i in range(1, len(listIndex)):
-      current_value = listIndex[i]
-      previous_value = listIndex[i - 1]
+    current_value = listIndex[i]
+    prev_value = listIndex[i-1]
+    
+    if current_value - prev_value <= distanceTolerance:
+      continue
+    else:
+      reduce.append(start)
+      start = current_value
 
-      # Si la diferencia es menor a 100, el rango se extiende
-      if current_value - previous_value < threshold:
-          end = current_value
-      else:
-          # Si la diferencia es mayor o igual a 100, se cierra el rango actual y se inicia uno nuevo
-          range_pairs.append((start, previous_value))
-          start = current_value
+  reduce.append(start)
+  return reduce
 
-  # Añadir el último rango
-  range_pairs.append((start, listIndex[-1]))
-
-  return range_pairs
-
-def getBiggestRange(clusters):
-  return max(clusters, key=lambda x: x[1] - x[0])
-
-def getTableImage(img, iPyN, range_pairs):
-  biggest_range = getBiggestRange(range_pairs)
-
-  tableIndex = []
-  maxValue = max(iPyN)
-  minValue = min(iPyN)
-  for index, value in enumerate(iPyN):
-    if abs(value - maxValue) > 0.05 and abs(value - minValue) > 0.05:
-      tableIndex.append(index)
-
-
-  initYTable = 0
-  endYTable = 0
-
-  for index in tableIndex:
-    if index > biggest_range[0] and index <= biggest_range[1]:
-        if initYTable == 0 or index < initYTable:
-            initYTable = index
-        if index > endYTable:
-            endYTable = index
-
-  return img[initYTable:endYTable, :]
 
 def run():
-  # pdf_path = "./documentos/DSN13.pdf"
-  pdf_path = "./documentos/FE-11834.pdf"
-  pages = dpf2images(pdf_path)
-  combined_image_rgb = unifyImagesVertically(pages)
-  # cv2.imwrite('combined_image.jpg', combined_image_rgb)
-  mask = detectGreenLines(combined_image_rgb)
-  # cv2.imwrite('mask.jpg', mask)
+  img_path = "./table.jpg"
+  img = cv2.imread(img_path)
+  mask_dilated = detectGreenLines(img)
 
-  iPy = integralProyectiva(mask, 'y')
-  iPyN, maximo = normalizarProyeccion(iPy)
-  range_pairs = rangeClusters1D(iPyN, 120)
+  DISTANCE_TOLERANCE = 15
+  iPx = integralProyectiva(mask_dilated, 'x')
+  iPx_norm, max_iPx = normalizarProyeccion(iPx)
+  listIndexX = detectBraveChange(iPx_norm, 0.1, DISTANCE_TOLERANCE)
 
-  imageTable = getTableImage( combined_image_rgb, iPyN, range_pairs)
-  showImage(imageTable)
+  iPy = integralProyectiva(mask_dilated, 'y')
+  iPy_norm, max_iPy = normalizarProyeccion(iPy)
+  listIndexY = detectBraveChange(iPy_norm, 0.1, DISTANCE_TOLERANCE)
+
+
+  print(len(listIndexX))
+  fig, (ax1, ax2) = plt.subplots(2, 1)
+
+  for idx, index in enumerate(listIndexX):
+    ax1.axvline(x=index, color='r')
+    ax1.axvline(x=index+DISTANCE_TOLERANCE, color='b')
+
+  ax1.plot(iPx_norm)
+  ax1.set_title('Proyección x')
+
+  print(len(listIndexY))
+
+  for idx, index in enumerate(listIndexY):
+    ax2.axvline(x=index, color='r')
+    ax2.axvline(x=index+DISTANCE_TOLERANCE, color='b')
+
+  ax2.plot(iPy_norm)
+  ax2.set_title('Proyección y')
+
+  plt.show()
+
+
+
+  cv2.imshow('mask', mask_dilated)
+  cv2.waitKey(0)
 
 
 if __name__ == '__main__':
