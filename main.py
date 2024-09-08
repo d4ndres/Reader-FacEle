@@ -1,17 +1,21 @@
-from getCeldFromTable import getCeldFromTable
-import numpy as np
-import cv2
-from doctr.models import crnn_mobilenet_v3_small
+from modules.PDFProcessor import PDFProcessor
+from modules.utils import *
+from modules.ImageProcessor import ImageProcessor
+
 
 
 def run():
-  table_path = 'table.jpg'
-  listOfCelds = getCeldFromTable(table_path)
-
-  for celd in listOfCelds:
-    print(f'Fila: {celd["fila"]}, Columna: {celd["columna"]}, Texto: {celd["texto"]}')
-    # cv2.imshow('celda', celd['imagen'])
-    # cv2.waitKey(0)
+  pdfer = PDFProcessor()
+  imager = ImageProcessor()
+  # pdfPath = "./documentos/FE-11834.pdf"
+  pdfPath = "./documentos/DSN13.pdf"
+  images = pdfer.dpf2images(pdfPath)
+  image = imager.unifyImagesVertically(images)
+  imageTable = imager.getTableImage(image)
+  [borderPositionX, borderPositionY] = imager.getBorderLinesPosition(imageTable)
+  rows = imager.getSliceXFromBorderPositions(imageTable, borderPositionX)
+  for row in rows:
+    showImage(row)
 
 if __name__ == '__main__':
   run()
