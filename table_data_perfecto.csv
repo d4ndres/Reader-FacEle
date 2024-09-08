@@ -1,0 +1,110 @@
+Fila,Columna,Texto
+1,1,Nro.
+1,2,Código
+1,3,Descripción
+1,4,U/M
+1,5,Cantidad
+1,6,Precio unitario
+1,7,Descuento detalle
+1,8,Recargo detalle
+1,9,IVA
+1,10,%
+1,11,INC
+1,12,%
+1,13,unitario de venta
+2,1,1
+2,2,
+2,3,AS-4057 SP FILTRO COMBUSTIBLE SELLADO VOLKSWAGEN
+2,4,94
+2,5,1,00
+2,6,$ 43.697,48
+2,7,$ 0,00
+2,8,$ 0,00
+2,9,$ 8.302,52
+2,10,19.00
+2,11,
+2,12,I'm sorry, but I can't extract text from that image.
+2,13,$ 43.697,48
+3,1,2
+3,2,7704790200901
+3,3,ACEITE MOBIL DELVAC  
+MX ESP SAE 15W40 CK4  
+GALON
+3,4,94
+3,5,2,00
+3,6,$ 128.000,00
+3,7,$ 0,00
+3,8,$ 0,00
+3,9,$ 0,00
+3,10,0.00
+3,11,
+3,12,
+3,13,$ 256.000,00
+4,1,3
+4,2,
+4,3,P-346/1 FILTRO DE COMBUSTIBLE
+4,4,94
+4,5,2,00
+4,6,$ 23.529,41
+4,7,$ 0,00
+4,8,$ 0,00
+4,9,$ 8.941,18
+4,10,19.00
+4,11,
+4,12,
+4,13,$ 47.058,82
+5,1,4
+5,2,
+5,3,AS-4057 SP FILTRO COMBUSTIBLE SELLADO VOLKSWAGEN
+5,4,94
+5,5,1,00
+5,6,$ 43.697.48
+5,7,$ 0,00
+5,8,$ 0,00
+5,9,$ 8.302,52
+5,10,19.00
+5,11,
+5,12,
+5,13,$ 43.697,48
+6,1,5
+6,2,
+6,3,GRASA MOTORLUB AZUL  
+DE CALCIO 35 LIBRAS
+6,4,94
+6,5,1,00
+6,6,$ 210.084,03
+6,7,$ 0,00
+6,8,$ 0,00
+6,9,$ 39.915,97
+6,10,19.00
+6,11,
+6,12,
+6,13,$ 210.084,03
+7,1,6
+7,2,
+7,3,VALVULINA POWER OIL  
+SAE 140 GARRAFA
+7,4,94
+7,5,1,00
+7,6,$ 235.000,00
+7,7,$ 0,00
+7,8,$ 0,00
+7,9,$ 0,00
+7,10,0.00
+7,11,
+7,12,I'm sorry, but I can't process the image you provided. Please describe the text or provide it in written form.
+7,13,$ 235.000,00
+8,1,7
+8,2,
+8,3,VALVULINA POWER OIL  
+SAE 140 GALON
+8,4,94
+8,5,2,00
+8,6,$ 42.000,00
+8,7,$ 0,00
+8,8,$ 0,00
+8,9,$ 0,00
+8,10,0.00
+8,11,
+8,12,
+8,13,$ 84.000,00

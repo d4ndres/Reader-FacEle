@@ -3,3 +3,5 @@ documentos/
 
 *.jpg
 helps.txt
+.env
+__pycache__/
