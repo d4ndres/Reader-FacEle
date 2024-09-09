@@ -46,6 +46,9 @@ class SignalProcessor:
 
 
   def identifyMajorTransitions(self, signal, threshold=0.1, distanceTolerance=5):
+    # podria mejorar teniendo en cuenta solo cambios en subida, o solo en bajada, o una alternos subida -> bajada -> subida, all
+    # default All
+
     listIndex = []
     for i in range(1, len(signal)):
       prev_value = signal[i-1]

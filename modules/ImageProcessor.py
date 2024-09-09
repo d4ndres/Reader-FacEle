@@ -38,6 +38,20 @@ class ImageProcessor:
     # graficarProyeccion(iPyN)
     return image[rangeTable[0]-10:rangeTable[1] + 10, :]
   
+  def getBorderLinesPositionX( self, imageTable, distanceTolerance=15 ):
+    mask = self.detectGreenLines(imageTable)
+
+    iPx = self.signalProcessor.projectiveIntegral(mask, 'x')
+    iPxN, _ = self.signalProcessor.normalization(iPx)
+    return self.signalProcessor.identifyMajorTransitions(iPxN, distanceTolerance=distanceTolerance)
+
+  def getBorderLinesPositionY( self, imageTable, distanceTolerance=15 ):
+    mask = self.detectGreenLines(imageTable)
+
+    iPy = self.signalProcessor.projectiveIntegral(mask, 'y')
+    iPyN, _ = self.signalProcessor.normalization(iPy)
+    return self.signalProcessor.identifyMajorTransitions(iPyN, distanceTolerance=distanceTolerance)
+
   def getBorderLinesPosition( self, imageTable ):
     mask = self.detectGreenLines(imageTable)
 
