@@ -5,3 +5,4 @@ documentos/
 helps.txt
 .env
 __pycache__/
+*.xlsx

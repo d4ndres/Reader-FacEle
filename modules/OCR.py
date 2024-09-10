@@ -15,6 +15,7 @@ class OCR:
       words = []
       for line in lines:
         for index, word in enumerate(line["words"]):
+          print("#", end='')
           height, width = pageDimension
           (xmin, ymin), (xmax, ymax) = word["geometry"]
           x, w = xmin * width, (xmax - xmin) * width

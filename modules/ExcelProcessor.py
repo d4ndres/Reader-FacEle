@@ -1,4 +1,6 @@
 
+import pandas as pd
+import os
 
 class ExcelProcessor:
   def __init__(self):
@@ -24,3 +26,7 @@ class ExcelProcessor:
       )
     
     return row
+  
+  def guardar_datos_en_excel(self, data, file_path="datos"):
+    df = pd.DataFrame(data)
+    df.to_excel(f'{file_path}.xlsx', index=False, header=False)
