@@ -1,8 +1,9 @@
 venv/
 documentos/
-
+__pycache__/
 *.jpg
 helps.txt
 .env
 __pycache__/
 *.xlsx
+*.pdf
