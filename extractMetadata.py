@@ -4,63 +4,72 @@ from modules.utils import *
 import matplotlib.pyplot as plt
 from modules.SignalProcessor import SignalProcessor
 import numpy as np
-from modules.OCR import OCR
+# from modules.OCR import OCR
 import matplotlib.patches as patches
 
 imager = ImageProcessor()
 pdfer = PDFProcessor()
 singer = SignalProcessor()
-ocrer = OCR()
+# ocrer = OCR()
+
+def signalShowNone(s1, s2, threshold=0.001):
+    # Asegúrate de que s1 y s2 sean arrays numpy
+    s1 = np.array(s1)
+    s2 = np.array(s2)
+    # Suma de las señales
+    suma = s1 - s2
+    # Crear un array de salida
+    resultado = np.where(suma == 0, 1, 0)
+    return resultado
+
+def obtener_rangos_altos(señal, minSize=0):
+    rangos = []
+    en_alto = False
+    inicio = 0
+    
+    for i, valor in enumerate(señal):
+        if valor == 1:
+            if not en_alto:
+                inicio = i
+                en_alto = True
+        else:
+            if en_alto:
+                rangos.append((inicio, i - 1))
+                en_alto = False
+    
+    if en_alto:
+        rangos.append((inicio, len(señal) - 1))
+    
+    return [ rango for rango in rangos if abs(rango[1] - rango[0]) > minSize ]
 
 
-def encontrar_valor(data, clave, umbral=0.80):
-  for sublista in data:
-    for index, lista in enumerate(sublista):
-      if isinstance(lista, list) and len(lista) > 1:
-        texto = ' '.join(lista)
-        if similaridad(clave, texto) >= umbral:
-          return sublista[index + 1][0]  # Retorna el valor siguiente a la clave
-  return None
-
-def run():
-  filePath = './documentos/DSN13.pdf'
-  images = pdfer.dpf2images(filePath)
-  image = imager.unifyImagesVertically(images)
+def getWhiteBlocks( image ):
   maskColor = imager.detectGreenLines(image)
   iPy = singer.projectiveIntegral(maskColor, 'y')
   iPyN, _ = singer.normalization(iPy)
-  lines = singer.identifyMajorTransitions(iPyN)
-  sectionImages = imager.getSliceYFromBorderPositions(image, lines, 150);
   
-  numero_documento_soporte = None
-  fecha_generacion = None
-  razon_social = None
-  nit_del_adquiriente = None
-  for img in sectionImages:
-    words = ocrer.processImageToText(img)
-    groups = ocrer.groupByGrid(words)
-    
-    if not numero_documento_soporte:
-      numero_documento_soporte = encontrar_valor(groups, 'Numero documento soporte:')
-    
-    if not fecha_generacion:
-      fecha_generacion = encontrar_valor(groups, 'Fecha de generacion:')
-    if not razon_social:
-      razon_social = encontrar_valor(groups, 'Razon social:')
-    if not nit_del_adquiriente:
-      nit_del_adquiriente = encontrar_valor(groups, 'NIT del adquiriente:')
+  gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+  _, mask = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+  maskInv = cv2.bitwise_not(mask)
+  iPyTex = singer.projectiveIntegral(maskInv, 'y')
+  iPyTextN, _ = singer.normalization(iPyTex)
+  
+  noneValues = signalShowNone(iPyTextN, iPyN)
+  rangosAltos = obtener_rangos_altos(noneValues, 30)
+  return rangosAltos
 
-    if (numero_documento_soporte != None and 
-        fecha_generacion != None and
-        razon_social != None and
-        nit_del_adquiriente != None
-        ):
-      break
+def sectionImages( image ):
+  rangosAltos = getWhiteBlocks(image)
+  mediaDeRangoAltos = [ int(rango[0] + (rango[1] - rango[0])/2 ) for rango in rangosAltos]
+  return imager.getSliceYFromBorderPositions(image, mediaDeRangoAltos)
+  
 
-  print('Numero documento soporte:', numero_documento_soporte)
-  print('Fecha de generacion:', fecha_generacion)
-  print('Razon social:', razon_social)
-  print('NIT del adquiriente:', nit_del_adquiriente)
+def run():
+  # filePath = './documentos/existentes/A-52298.pdf'
+  filePath = './documentos/existentes/DSN14.pdf'
+  images = pdfer.dpf2images(filePath)
+  image = imager.unifyImagesVertically(images)
+  sectionImg = sectionImages(image)
 
 
 if __name__ == '__main__':
