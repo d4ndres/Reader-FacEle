@@ -28,6 +28,13 @@ class ImageProcessor:
     mask_dilated = cv2.dilate(mask, kernel, iterations=2)
     return mask_dilated
   
+  def getSectionImages(self, image) -> list:
+    maskColor = self.detectGreenLines(image)
+    iPy = self.signalProcessor.projectiveIntegral(maskColor, 'y')
+    iPyN, _ = self.signalProcessor.normalization(iPy)
+    lines = self.signalProcessor.identifyMajorTransitions(iPyN)
+    return self.getSliceYFromBorderPositions(image, lines, 150)
+  
   def getTableImage(self, image):
     mask = self.detectGreenLines(image)
     iPy = self.signalProcessor.projectiveIntegral(mask, 'y')

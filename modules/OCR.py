@@ -1,4 +1,5 @@
 import os
+from modules.utils import *
 os.environ['USE_TORCH'] = '1'
 from doctr.models import ocr_predictor
 
@@ -36,7 +37,7 @@ class OCR:
           )
       return words
   
-  def group_by_x(self, data, threshold=20):
+  def group_by_x(self, data, threshold=1):
     data = sorted(data, key=lambda item: item['x'])
 
     result = []
@@ -52,12 +53,12 @@ class OCR:
           current_group.append(item)
         else:
           # Si el valor de 'y' excede el umbral, agrega el grupo actual al resultado y empieza un nuevo grupo
-          result.append([item['label'] for item in current_group])
+          result.append(' '.join([item['label'] for item in current_group]))
           current_group = [item]
     
     # Agrega el último grupo si no está vacío
     if current_group:
-      result.append([item['label'] for item in current_group])
+      result.append(' '.join([item['label'] for item in current_group]))
     return result
     
 
@@ -92,4 +93,34 @@ class OCR:
     # Agrega el último grupo si no está vacío
     if current_group:
       result.append(self.group_by_x(current_group))
+    return result
+  
+  
+  def encontrar_valor(self, data, clave, umbral=0.80):
+    for sublista in data:
+      for index, lista in enumerate(sublista):
+        if isinstance(lista, list) and len(lista) > 1:
+          texto = ' '.join(lista)
+          if similaridad(clave, texto) >= umbral:
+            return sublista[index + 1][0]  # Retorna el valor siguiente a la clave
+    return None
+  
+  def findKeyValueFromImage(self, images, toFind : list):
+    result = { key: None for key in toFind }
+
+    for img in images:
+      words = self.processImageToText(img)
+      groups = self.groupByGrid(words)
+
+      for line in groups:
+        print(line)
+
+      for key, value in result.items():
+        if value == None:
+          out = self.encontrar_valor(groups, key)
+          # print(f'key {key}, value {value}, out {out}')
+          result[f'{key}'] = out
+      if all( value is not None for value in result.values() ):
+        break
+
     return result

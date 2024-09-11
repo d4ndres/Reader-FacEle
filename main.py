@@ -12,11 +12,12 @@ pdfer = PDFProcessor()
 imager = ImageProcessor()
 exceler = ExcelProcessor()
 
-def tableImageToList(pdfPath):
+def pdf2image(pdfPath):
   images = pdfer.dpf2images(pdfPath)
-  image = imager.unifyImagesVertically(images)
+  return imager.unifyImagesVertically(images)
+
+def tableImageToList(image):
   imageTable = imager.getTableImage(image)
-  
   spliceOfContentX = imager.getBorderLinesPositionX(imageTable, 15)
   _, borderPositionY = imager.getBorderLinesPosition(imageTable)
   rows = imager.getSliceYFromBorderPositions(imageTable, borderPositionY)
@@ -30,6 +31,9 @@ def tableImageToList(pdfPath):
   print('')
   return table
 
+def keyValueToFind(image, keys):
+  sectionImages = imager.getSectionImages(image)
+  return ocr.findKeyValueFromImage( sectionImages, keys)
 
 def run():
 
@@ -42,10 +46,27 @@ def run():
   totalIndex = len(fileNames)
   for index, fileName in enumerate(fileNames):
     print( f'{index}/{totalIndex}')
-    table = tableImageToList(rf'{pathDir}\{fileName}')
+
+    image = pdf2image(rf'{pathDir}\{fileName}')
+    keysMetaData = [
+    'NIT del adquiriente',
+    'Razon social',
+    'Fecha de generacion',
+    'Fecha de Emision:',
+    'Numero documento soporte',
+    'Numero de Factura:'
+    ]
+    metadata = keyValueToFind(image, keysMetaData )
+    print(metadata)
+
+    table = tableImageToList(image)
     for row in table:
       row.insert(0, fileName)
+      # for key in keysMetaData:
+      #   row.insert(0, metadata[key])
       data.append(row)
+
+    break
 
   exceler.guardar_datos_en_excel(data, 'result_revision')
 

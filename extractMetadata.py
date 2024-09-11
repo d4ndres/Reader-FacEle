@@ -6,6 +6,7 @@ from modules.SignalProcessor import SignalProcessor
 import numpy as np
 from modules.OCR import OCR
 import matplotlib.patches as patches
+from  difflib import SequenceMatcher
 
 imager = ImageProcessor()
 pdfer = PDFProcessor()
@@ -13,55 +14,55 @@ singer = SignalProcessor()
 ocrer = OCR()
 
 
-def encontrar_valor(data, clave, umbral=0.80):
-  for sublista in data:
-    for index, lista in enumerate(sublista):
-      if isinstance(lista, list) and len(lista) > 1:
-        texto = ' '.join(lista)
-        if similaridad(clave, texto) >= umbral:
-          return sublista[index + 1][0]  # Retorna el valor siguiente a la clave
+def encontrar_valor(data, tofind, threshold=0.8):
+  for row_index, item in enumerate(data):
+    similarity = SequenceMatcher(None, tofind, item).ratio()
+    print( f'{tofind} === {item} -> %{similarity}')
+    if similarity >= threshold:
+      return None
   return None
 
-def run():
+def run( toFind ):
   filePath = './documentos/DSN13.pdf'
   images = pdfer.dpf2images(filePath)
   image = imager.unifyImagesVertically(images)
+
+
+
   maskColor = imager.detectGreenLines(image)
   iPy = singer.projectiveIntegral(maskColor, 'y')
   iPyN, _ = singer.normalization(iPy)
   lines = singer.identifyMajorTransitions(iPyN)
-  sectionImages = imager.getSliceYFromBorderPositions(image, lines, 150);
+  sectionImages = imager.getSliceYFromBorderPositions(image, lines, 150)
   
-  numero_documento_soporte = None
-  fecha_generacion = None
-  razon_social = None
-  nit_del_adquiriente = None
+  result = { key: None for key in toFind }
+
   for img in sectionImages:
     words = ocrer.processImageToText(img)
     groups = ocrer.groupByGrid(words)
     
-    if not numero_documento_soporte:
-      numero_documento_soporte = encontrar_valor(groups, 'Numero documento soporte:')
-    
-    if not fecha_generacion:
-      fecha_generacion = encontrar_valor(groups, 'Fecha de generacion:')
-    if not razon_social:
-      razon_social = encontrar_valor(groups, 'Razon social:')
-    if not nit_del_adquiriente:
-      nit_del_adquiriente = encontrar_valor(groups, 'NIT del adquiriente:')
+    for line in groups:
+      print(line)
 
-    if (numero_documento_soporte != None and 
-        fecha_generacion != None and
-        razon_social != None and
-        nit_del_adquiriente != None
-        ):
+    for key, value in result.items():
+      if value == None:
+        out = encontrar_valor(groups, key)
+        result[f'{key}'] = out
+
+
+    if all( value is not None for value in result.values() ):
       break
 
-  print('Numero documento soporte:', numero_documento_soporte)
-  print('Fecha de generacion:', fecha_generacion)
-  print('Razon social:', razon_social)
-  print('NIT del adquiriente:', nit_del_adquiriente)
+  return result
 
 
 if __name__ == '__main__':
-  run()
+  valuesFound = run([
+  'Numero documento soporte',
+  'Fecha de generacion',
+  'Razon social',
+  'NIT del adquiriente',
+  ])
+
+  for key, value in valuesFound.items():
+    print(f'{key}: {value}')
