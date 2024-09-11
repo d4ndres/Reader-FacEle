@@ -44,8 +44,7 @@ class SignalProcessor:
     return max(rangeTable, key=lambda x: x[1] - x[0])
 
 
-
-  def identifyMajorTransitions(self, signal, threshold=0.1, distanceTolerance=5):
+  def identifyMajorTransitions(self, signal, threshold=0.1, distanceTolerance=5, type='all'):
     # podria mejorar teniendo en cuenta solo cambios en subida, o solo en bajada, o una alternos subida -> bajada -> subida, all
     # default All
 
@@ -56,7 +55,12 @@ class SignalProcessor:
       max_value = max(prev_value, current_value)
       
       if max_value != 0 and abs(prev_value - current_value) / max_value >= threshold:
-        listIndex.append(i)
+        if type == 'all':
+          listIndex.append(i)
+        elif type == 'down' and (prev_value - current_value) > 0 :
+          listIndex.append(i)
+        elif type == 'up' and (prev_value - current_value) < 0 :
+          listIndex.append(i)
 
     # reduce by a distance tolerance
     reduce = []
