@@ -178,49 +178,53 @@ def run():
   totalIndex = len(fileNames)
   for index, fileName in enumerate(fileNames):
     filePath = rf'{pathDir}\{fileName}'
-    print( f'Iniciando con {fileName}')
-    print( f'{index + 1} / {totalIndex}')
 
-    metadataToFind = {
-      'Datos del Documento': ['Codigo Unico de Factura - CUFE :', 'Numero de Factura:', 'Fecha de Emision:'],
-      'Datos del Emisor / Vendedor': ['Razon Social:', 'Nit del Emisor:'],
-      'Datos del Adquiriente / Comprador': ['Nombre o Razon Social:', 'Numero Documento:']
-    }
+    try:
 
-    pdfMetaData = allDataSections( filePath )
+      print( f'Iniciando con {fileName}')
+      print( f'{index + 1} / {totalIndex}')
 
-    metaDataOut = {}
-    
-    # la logica al crearlo es clara y sin dudar. citicamente esta horrible.
-    for keySectionToFind, listKeysToFind in metadataToFind.items():
-      for keyFound, valueFound in pdfMetaData.items():
-        if diffString(keySectionToFind, keyFound) > 0.7:
-          for key, value in valueFound.items():
-            for keyToFind in listKeysToFind:
-              if diffString(key, keyToFind) > 0.7:
-                metaDataOut[f'{keySectionToFind} | {keyToFind}'] = value
+      metadataToFind = {
+        'Datos del Documento': ['Codigo Unico de Factura - CUFE :', 'Numero de Factura:', 'Fecha de Emision:'],
+        'Datos del Emisor / Vendedor': ['Razon Social:', 'Nit del Emisor:'],
+        'Datos del Adquiriente / Comprador': ['Nombre o Razon Social:', 'Numero Documento:']
+      }
 
-    sortedOut = [[key, value] for key, value in sorted(metaDataOut.items())]
+      pdfMetaData = allDataSections( filePath )
 
-    table = tableImageToList(filePath)
-    headerDetection = False # Future
-    for index_col, row in enumerate(table):
+      metaDataOut = {}
       
-      if not headerDetection:
-        headerDetection = isNumeric(table[index_col + 1 ][0])
+      # la logica al crearlo es clara y sin dudar. citicamente esta horrible.
+      for keySectionToFind, listKeysToFind in metadataToFind.items():
+        for keyFound, valueFound in pdfMetaData.items():
+          if diffString(keySectionToFind, keyFound) > 0.7:
+            for key, value in valueFound.items():
+              for keyToFind in listKeysToFind:
+                if diffString(key, keyToFind) > 0.7:
+                  metaDataOut[f'{keySectionToFind} | {keyToFind}'] = value
+
+      sortedOut = [[key, value] for key, value in sorted(metaDataOut.items())]
+
+      table = tableImageToList(filePath)
+      headerDetection = False # Future
+      for index_col, row in enumerate(table):
+        
+        if not headerDetection:
+          headerDetection = isNumeric(table[index_col + 1 ][0])
+
+          if headerDetection:
+            for out in sortedOut:
+              row.insert(0, out[0])
+            df.append(row)
+          continue
 
         if headerDetection:
           for out in sortedOut:
-            row.insert(0, out[0])
+            row.insert(0, out[1])
           df.append(row)
-        continue
 
-      if headerDetection:
-        for out in sortedOut:
-          row.insert(0, out[1])
-        df.append(row)
-
-    break
+    except:
+      print('Error brutal en ', filePath)
 
   exceler.guardar_datos_en_excel(df, 'result_revision')
 
