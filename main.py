@@ -161,7 +161,12 @@ def allDataSections( filePath ):
 
   return globalDc
 
-
+def isNumeric(dato):
+  try:
+    float(dato)
+    return True
+  except ValueError:
+    return False
 
 def run():
   currentPath = os.getcwd()
@@ -193,17 +198,26 @@ def run():
           for key, value in valueFound.items():
             for keyToFind in listKeysToFind:
               if diffString(key, keyToFind) > 0.7:
-                metaDataOut[keyToFind] = value
+                metaDataOut[f'{keySectionToFind} | {keyToFind}'] = value
 
-    sortedOut = [valor for clave, valor in sorted(metaDataOut.items())]
+    sortedOut = [[key, value] for key, value in sorted(metaDataOut.items())]
 
     table = tableImageToList(filePath)
-    headerDetection = True # Future
-    for row in table:
-      for out in sortedOut:
-        row.insert(0, out)
+    headerDetection = False # Future
+    for index_col, row in enumerate(table):
       
+      if not headerDetection:
+        headerDetection = isNumeric(table[index_col + 1 ][0])
+
+        if headerDetection:
+          for out in sortedOut:
+            row.insert(0, out[0])
+          df.append(row)
+        continue
+
       if headerDetection:
+        for out in sortedOut:
+          row.insert(0, out[1])
         df.append(row)
 
     break
