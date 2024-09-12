@@ -1,11 +1,9 @@
 from modules.ImageProcessor import ImageProcessor
 from modules.PDFProcessor import PDFProcessor
 from modules.utils import *
-import matplotlib.pyplot as plt
 from modules.SignalProcessor import SignalProcessor
 import numpy as np
 from modules.OCR import OCR
-import matplotlib.patches as patches
 
 imager = ImageProcessor()
 pdfer = PDFProcessor()
@@ -86,34 +84,26 @@ def crear_diccionario(datos):
       diccionario_secundario[datos[i]] = valor
 
     # Crear el diccionario principal
-  diccionario_principal = {datos[0]: diccionario_secundario}
+
+  title = None
+  for candidate in datos:
+    if (diffString(candidate, 'Representacion') < 0.7 and 
+        diffString(candidate, 'Grafica') < 0.7 ):
+      title = candidate
+      break
+
+  diccionario_principal = {title: diccionario_secundario}
   return diccionario_principal
 
 def run():
-  # filePath = './documentos/existentes/A-52298.pdf'
-  filePath = './documentos/existentes/DSN14.pdf'
+  filePath = './documentos/existentes/A-52298.pdf'
+  # filePath = './documentos/existentes/DSN14.pdf'
   images = pdfer.dpf2images(filePath)
   image = imager.unifyImagesVertically(images)
   sectionImg = sectionImages(image)
 
-  sections = [
-    'Datos del Documento',
-    'Datos del Emisor',
-    'Datos del Adquiriente',
-  ]
-
+  globalDc = {}
   for section in sectionImg:
-    maskColor = imager.detectGreenLines(section)
-    iPy = singer.projectiveIntegral(maskColor, 'y')
-    iPyN, _ = singer.normalization(iPy)
-    gray = cv2.cvtColor(section, cv2.COLOR_BGR2GRAY)
-    _, mask = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
-    maskInv = cv2.bitwise_not(mask)
-    iPyTex = singer.projectiveIntegral(maskInv, 'y')
-    iPyTextN, _ = singer.normalization(iPyTex)
-    
-    rangosAltos = getWhiteBlocks(section, minSize=0)
-
     datosConvenientes = []
     words = ocrer.processImageToText(section)
     data = ocrer.groupByProp(words, 'y', 5)
@@ -123,20 +113,11 @@ def run():
         datosConvenientes.append(' '.join([ word["label"] for word in groups]))
 
     dc = crear_diccionario(datosConvenientes)
-    print(dc)
+    
+    for key, value in dc.items():
+      globalDc[key] = value
 
-
-    fig, ax = plt.subplots(2, 1, figsize=(8, 6))
-
-    ax[0].imshow(section)
-    ax[1].plot(iPyN)
-    ax[1].plot(iPyTextN)
-
-    for rango in rangosAltos:
-      redLineOverGraphX([rango[0]], 'b')
-      redLineOverGraphX([rango[1]], 'cyan')
-
-    plt.show()
+  print(globalDc)
 
 if __name__ == '__main__':
   run()

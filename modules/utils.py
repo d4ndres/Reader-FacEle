@@ -2,11 +2,15 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import mplcursors as tooltip
+from difflib import SequenceMatcher
+
+def diffString( s1, s2):
+  return SequenceMatcher(None, s1, s2).ratio() 
 
 def showImage(img, name='img'):
-  cv2.imshow(name, img)
-  cv2.waitKey(0)
-  cv2.destroyAllWindows()
+	cv2.imshow(name, img)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 
 def graficarProyeccion(proyeccion, eje='any'):
   plt.plot(proyeccion)
