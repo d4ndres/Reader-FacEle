@@ -14,7 +14,6 @@ def graficarProyeccion(proyeccion, eje='any'):
   plt.show()
 
 def redLineOverGraphX( listIndex, color='r'):
-  print(len(listIndex))
   for lineIndex in listIndex:
     plt.axvline(x=lineIndex, color=color, linestyle='-')
 

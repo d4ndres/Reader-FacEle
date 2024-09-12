@@ -59,7 +59,49 @@ class OCR:
     if current_group:
       result.append([item['label'] for item in current_group])
     return result
+
+  def groupByXW(self, data, threshold=5):
+    data = sorted(data, key=lambda x: x['x'])
+    result = []
+    current_group = []
     
+    for item in data:
+        if not current_group:
+            current_group.append(item)
+        else:
+            if abs(item['x'] - (current_group[-1]['x'] + current_group[-1]['w'])) <= threshold:
+                current_group.append(item)
+            else:
+              result.append(current_group)
+              current_group = [item]
+    if current_group:
+      result.append(current_group)
+    return result
+
+  def groupByProp(self, data, prop, threshold=5, callback=None):
+    data = sorted(data, key=lambda x: x[prop])
+    result = []
+    current_group = []
+    
+    for item in data:
+        if not current_group:
+            current_group.append(item)
+        else:
+            if abs(item[prop] - current_group[-1][prop]) <= threshold:
+                current_group.append(item)
+            else:
+              if callback:
+                result.append(callback(current_group))
+              else:
+                result.append(current_group)
+              current_group = [item]
+    if current_group:
+      if callback:
+        result.append(callback(current_group))
+      else:
+        result.append(current_group)
+    return result
+
 
   def groupByGrid(self, data, threshold=5):
     data = sorted(data, key=lambda x: x['y'])
@@ -86,10 +128,10 @@ class OCR:
                 current_group.append(item)
             else:
                 # Si el valor de 'y' excede el umbral, agrega el grupo actual al resultado y empieza un nuevo grupo
-                result.append(self.group_by_x(current_group))
+                result.append(current_group)
                 current_group = [item]
     
     # Agrega el último grupo si no está vacío
     if current_group:
-      result.append(self.group_by_x(current_group))
+      result.append(current_group)
     return result
