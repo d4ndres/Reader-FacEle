@@ -168,9 +168,11 @@ def isNumeric(dato):
   except ValueError:
     return False
 
-def run():
+def run(month, empresa):
+  EMPRESA = empresa
+  dirFocus = month
   currentPath = os.getcwd()
-  pathDir = rf'{currentPath}\documentos\existentes'
+  pathDir = rf'{currentPath}\documentos\empresas\{EMPRESA}\{dirFocus}'
   fileNames = os.listdir(pathDir)
 
 
@@ -178,7 +180,8 @@ def run():
   totalIndex = len(fileNames)
   for index, fileName in enumerate(fileNames):
     filePath = rf'{pathDir}\{fileName}'
-
+    if not '.pdf' in filePath:
+      continue
     try:
 
       print( f'Iniciando con {fileName}')
@@ -214,19 +217,24 @@ def run():
 
           if headerDetection:
             for out in sortedOut:
-              row.insert(0, out[0])
+              row.append(out[0])
             df.append(row)
           continue
 
         if headerDetection:
           for out in sortedOut:
-            row.insert(0, out[1])
+            row.append(out[1])
           df.append(row)
 
     except:
       print('Error brutal en ', filePath)
 
-  exceler.guardar_datos_en_excel(df, 'result_revision')
+  exceler.guardar_datos_en_excel(df, f'{EMPRESA}_{dirFocus}')
 
 if __name__ == '__main__':
-  run()
+  months = [
+          'JUNIO',
+          ]
+  empresa = 'something'
+  for month in months:
+    run(month, empresa=empresa)          
